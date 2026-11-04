@@ -38,7 +38,7 @@ ov.innerHTML = `<div class="lv-leiste"><div class="lv-wo"><small id="lvort"></sm
   <button class="lv-k" id="lvhell" title="Helle Tafel (für helle Räume)">◐</button><button class="lv-k" id="lvdruck">🖨 Drucken</button><button class="lv-k" id="lvvoll" title="Vollbild (F)">⛶</button><button class="lv-k lv-x" id="lvzu" aria-label="Schließen">✕</button></div></div>
   <div class="lv-haupt"><div class="lv-tafel" id="lvtafel" tabindex="0"></div><aside class="lv-notizen" id="lvnotizen" hidden></aside></div>
   <div class="lv-fuss"><button class="lv-k" id="lvzurueck">◀ Zurück</button><div class="lv-fort"><i id="lvbar"></i></div><span id="lvzahl"></span><button class="lv-k" id="lvalles">Alles zeigen</button><button class="lv-k lv-weiter" id="lvweiter">Weiter ▶</button></div>
-  <div class="lv-druckmenue" id="lvdm" hidden><button data-d="schueler">Hefteintrag (Schülerfassung)</button><button data-d="notizen">Hefteintrag mit Vortragsnotizen</button><button data-d="raum">Alle 4 Einträge dieses Raums</button></div>`;
+  <div class="lv-druckmenue" id="lvdm" hidden><button data-d="schueler">Hefteintrag (Schülerfassung)</button><button data-d="notizen">Hefteintrag mit Vortragsnotizen</button><button data-d="raum">Alle 4 Einträge dieses Raums</button><button data-d="word">📄 Hefteintrag als Word</button><button data-d="wordn">📄 Word mit Vortragsnotizen</button><button data-d="wordraum">📄 Alle 4 Einträge als Word</button></div>`;
 const add = () => document.body.appendChild(ov);
 if (document.body) add(); else document.addEventListener("DOMContentLoaded", add);
 const $ = s => ov.querySelector(s);
@@ -140,7 +140,10 @@ try { if (localStorage.getItem("lt-hell")) document.documentElement.classList.ad
 $("#lvvoll").onclick = () => { if (document.fullscreenElement) document.exitFullscreen().catch(() => {}); else if (ov.requestFullscreen) ov.requestFullscreen().catch(() => {}); };
 $("#lvdruck").onclick = ev => { ev.stopPropagation(); $("#lvdm").hidden = !$("#lvdm").hidden; };
 $("#lvdm").onclick = ev => { const b = ev.target.closest("button"); if (!b || !V) return; $("#lvdm").hidden = true;
-  if (b.dataset.d === "raum") LK.drucken(eintraege(V.raum).map(e => druckHeft(e, V.raum, false)).join(""), `Hefteinträge ${raumName(V.raum)}`);
+  if (b.dataset.d === "word" || b.dataset.d === "wordn" || b.dataset.d === "wordraum")
+    LK.wordHeft(V.raum, b.dataset.d === "wordraum" ? "alle" : V.nr, b.dataset.d === "wordn")
+      .then(n => toast("Word-Datei „" + n + "“ wird geladen")).catch(e => { console.error(e); toast("Word-Export fehlgeschlagen"); });
+  else if (b.dataset.d === "raum") LK.drucken(eintraege(V.raum).map(e => druckHeft(e, V.raum, false)).join(""), `Hefteinträge ${raumName(V.raum)}`);
   else LK.drucken(druckHeft(V.e, V.raum, b.dataset.d === "notizen"), LK.plain(V.e.titel)); };
 ov.addEventListener("click", ev => { if (!ev.target.closest("#lvdm,#lvdruck")) $("#lvdm").hidden = true;
   // Nach einem Mausklick auf einen Knopf der Leiste wieder die Tafel fokussieren, damit Leertaste/Pfeile weiter durch das Tafelbild schalten

@@ -1,8 +1,9 @@
 /* ---------- lehrer/40_word.js ---------- */
 /* =====================================================================
-   Lehrkraft-Version · Word-Ausgabe (.docx) des Schulaufgaben-Generators
+   Lehrkraft-Version · Word-Ausgabe (.docx): Schulaufgaben-Generator und Hefteinträge/Vortrag
    Ohne Fremdbibliothek: WordprocessingML von Hand, ZIP ohne Kompression, Skizzen und Diagramme als PNG (SVG → Canvas).
    LK.word(was, ctx) mit was = "A" | "B" | "EA" | "EB" | "alles"; ctx kommt aus 20_generator.js.
+   LK.wordHeft(raumId, nr | "alle", mitNotizen) exportiert Hefteinträge (aus LEHRER_DATEN.hefte).
    ===================================================================== */
 (() => {
 const LK = window.LK; if (!LK || !LK.D) return;
@@ -85,12 +86,19 @@ function Doku(){
   };
 }
 async function bausteine(doc, bl, ind){
+  const liste = (punkte, nummeriert) => (punkte || []).forEach((p, i) => doc.add(P(R(nummeriert ? (i + 1) + ".)" : "•") + TAB + runs(p), {ind: [ind + 340, 340], tabs: [["left", ind + 340]]})));
   for (const b of bl ? [].concat(bl) : []) {
     if (b.art === "skizze") { await doc.bild(LK.svg(b.svg, b.titel), ind); if (b.titel) doc.add(P(runs(b.titel, {sz: 18, color: "555555"}), {ind: [ind]})); }
     else if (b.art === "diagramm") { await doc.bild(LK.diagramm(b), ind); if (b.titel) doc.add(P(runs(b.titel, {sz: 18, color: "555555"}), {ind: [ind]})); }
     else if (b.art === "tabelle") { if (b.titel) doc.add(P(runs(b.titel, {b: true}), {ind: [ind]})); doc.add(tabelle((b.kopf ? [b.kopf] : []).concat(b.zeilen || []), (b.kopf || b.zeilen[0]).map(() => 1), {kopf: !!b.kopf, ind, breite: Math.min(BREITE - ind, 1400 * (b.kopf || b.zeilen[0]).length), mitte: true})); }
-    else if (b.art === "liste") (b.punkte || []).forEach(p => doc.add(P(R("•") + TAB + runs(p), {ind: [ind + 340, 340], tabs: [["left", ind + 340]]})));
+    else if (b.art === "liste") { if (b.titel) doc.add(P(runs(b.titel, {b: true}), {ind: [ind], keep: true})); liste(b.punkte, b.nummeriert); }
     else if (b.art === "groesse") doc.add(tabelle([["Größe", b.name], ["Formelzeichen", b.zeichen], ["Einheit", b.einheit]].concat(b.messgeraet ? [["Messgerät", b.messgeraet]] : []), [1, 2], {ind, breite: 6000}));
+    else if (b.art === "merke" || b.art === "achtung") doc.add(P(R((b.art === "achtung" ? "⚠ " : "") + (b.titel || (b.art === "achtung" ? "Achtung" : "Merke")) + ": ", {b: true}) + runs(b.text), {ind: [ind], vor: 100}));
+    else if (b.art === "formel") { doc.add(P(runs(b.formel, {b: true, sz: 24}), {ind: [ind], vor: 100, keep: true})); if (b.legende && b.legende.length) doc.add(tabelle(b.legende, b.legende[0].map(() => 1), {ind, breite: Math.min(BREITE - ind, 3000)})); if (b.text) doc.add(P(runs(b.text), {ind: [ind]})); }
+    else if (b.art === "versuch") { doc.add(P(R("Versuch" + (b.titel ? ": " + b.titel : ""), {b: true}), {ind: [ind], vor: 100, keep: true})); [["aufbau", "Aufbau"], ["durchfuehrung", "Durchführung"], ["beobachtung", "Beobachtung"], ["ergebnis", "Ergebnis"]].forEach(([k, lab]) => { if (b[k]) doc.add(P(R(lab + ": ", {b: true}) + runs(b[k]), {ind: [ind + 340]})); }); }
+    else if (b.art === "beispiel") { doc.add(P(R(b.titel || "Beispiel", {b: true}), {ind: [ind], vor: 100, keep: true})); if (b.aufgabe) doc.add(P(runs(b.aufgabe), {ind: [ind]})); if (b.gegeben || b.gesucht) doc.add(P(R("Gegeben: ", {b: true}) + runs((b.gegeben || []).join("; ")) + (b.gesucht ? BR + R("Gesucht: ", {b: true}) + runs([].concat(b.gesucht).join("; ")) : ""), {ind: [ind + 340]})); (b.loesung || []).forEach(z => doc.add(P(runs(z), {ind: [ind + 340]}))); if (b.antwort) doc.add(P(runs(b.antwort, {i: true}), {ind: [ind + 340]})); }
+    else if (b.art === "frage") { doc.add(P(R("Frage", {b: true}), {ind: [ind], vor: 100, keep: true})); doc.add(P(runs(b.frage), {ind: [ind + 340]})); if (b.antwort) doc.add(P(runs(b.antwort, {i: true}), {ind: [ind + 340]})); }
+    else if (b.art === "vergleich") { const sp = b.spalten || []; if (sp.length) doc.add(tabelle([sp.map(s => s.titel || ""), sp.map(s => (s.punkte || []).map(p => "• " + p).join("\n"))], sp.map(() => 1), {kopf: true, sz: 18, ind, breite: BREITE - ind})); }
     else { const t = b.text || b.formel || b.frage || b.aufgabe; if (t) doc.add(P(runs(t), {ind: [ind]})); }
   }
 }
@@ -148,6 +156,49 @@ function matrix(doc, ctx){
   if (ctx.stoff) doc.add(P(R("Abgefragter Stoff: ", {b: true, sz: 18}) + R(ctx.stoff, {sz: 18}), {vor: 120}));
 }
 
+/* ---------- Hefteintrag / Vortrag als Word ---------- */
+const raumTitel = id => (D.raeume && D.raeume[id] && D.raeume[id].titel) || id;
+function vortragDoc(doc, e){
+  const v = e.vortrag || {}, li = a => (a || []).forEach(x => doc.add(P(R("•") + TAB + runs(x), {ind: [340, 340], tabs: [["left", 340]]})));
+  doc.add(P(R("Vortragsnotizen", {b: true, sz: 24}), {seite: true, linie: true, nach: 160}));
+  if (v.ziel) doc.add(P(R("Ziel: ", {b: true}) + runs(v.ziel)));
+  if (v.einstieg) doc.add(P(R("Einstieg: ", {b: true}) + runs(v.einstieg)));
+  if (v.material && v.material.length) { doc.add(P(R("Material:", {b: true}), {keep: true})); li(v.material); }
+  if (v.fehlvorstellungen && v.fehlvorstellungen.length) { doc.add(P(R("Typische Fehlvorstellungen:", {b: true}), {keep: true})); li(v.fehlvorstellungen); }
+  if (v.fragen && v.fragen.length) { doc.add(P(R("Verständnisfragen an die Klasse:", {b: true}), {keep: true})); v.fragen.forEach(q => doc.add(P(R("•") + TAB + runs(q.frage) + (q.erwartung ? BR + R("Erwartung: ", {i: true}) + runs(q.erwartung, {i: true}) : ""), {ind: [340, 340], tabs: [["left", 340]]}))); }
+  if (v.abschluss) doc.add(P(R("Abschluss: ", {b: true}) + runs(v.abschluss)));
+  if (v.hausaufgabe) doc.add(P(R("Hausaufgabe: ", {b: true}) + runs(v.hausaufgabe)));
+}
+async function heftDoc(doc, raumId, e, mitNotizen, erste){
+  doc.add(P(runs(`Physik 8 · ${raumTitel(raumId)}${e.kap ? " · " + e.kap : ""} · Hefteintrag ${e.nr} von 4${e.dauer ? " · etwa " + e.dauer + " min" : ""}`, {sz: 18, color: "555555"}), {seite: !erste, nach: 60}));
+  doc.add(P(runs(e.titel, {b: true, sz: 30}), {nach: 120, linie: true}));
+  for (const s of e.schritte || []) {
+    if (s.ueberschrift) doc.add(P(runs(s.ueberschrift, {b: true, sz: 24}), {vor: 160, keep: true}));
+    await bausteine(doc, s.bloecke, 0);
+    if (mitNotizen) {
+      if (s.sprechtext) doc.add(P(runs(s.sprechtext, {i: true, color: "444444"}), {vor: 60}));
+      if (s.impuls) doc.add(P(R("Impuls: ", {b: true}) + runs(s.impuls.frage) + (s.impuls.erwartung ? BR + R("Erwartung: ", {i: true}) + runs(s.impuls.erwartung, {i: true}) : "")));
+      if (s.zeigen) doc.add(P(R("Zeigen: ", {b: true}) + runs(s.zeigen)));
+    }
+  }
+  if (mitNotizen) vortragDoc(doc, e);
+}
+const sane = s => String(s).replace(/[^\wäöüÄÖÜß.-]+/g, "-").replace(/^-+|-+$/g, "");
+function herunterladen(blob, name){
+  LK.wordLetzte = {blob, name};
+  const url = URL.createObjectURL(blob), a = document.createElement("a"); a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 30000);
+  return name;
+}
+LK.wordHeft = async (raumId, nr, mitNotizen) => {
+  const es = ((D.hefte || {})[raumId] || {}).eintraege || [];
+  const liste = nr === "alle" ? es : es.filter(e => e.nr === nr);
+  if (!liste.length) throw new Error("kein Hefteintrag gefunden: " + raumId + " / " + nr);
+  const doc = Doku();
+  for (const [i, e] of liste.entries()) await heftDoc(doc, raumId, e, !!mitNotizen, i === 0);
+  return herunterladen(docx(doc), sane((nr === "alle" ? "Heft-" + raumId : "Hefteintrag-" + raumId + "-" + nr) + (mitNotizen ? "-mit-Notizen" : "")) + ".docx");
+};
+
 /* ---------- ZIP (ohne Kompression) ---------- */
 const CRC = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
 const crc32 = b => { let c = 0xFFFFFFFF; for (let i = 0; i < b.length; i++) c = CRC[(c ^ b[i]) & 255] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; };
@@ -185,11 +236,8 @@ LK.word = async (was, ctx) => {
     else if (k === "EA" || k === "EB") await erwartung(doc, ctx, ab ? k.slice(1) : "", i > 0);
     else matrix(doc, ctx);
   }
-  const blob = docx(doc), name = `${(ctx.G.nr || "").replace(/\.$/, "")}-${ctx.artName()}-Physik-${ctx.G.klasse || "8"}${was === "alles" ? "" : "-" + {A: "Angabe-A", B: "Angabe-B", EA: "Erwartungshorizont-A", EB: "Erwartungshorizont-B"}[was]}.docx`
+  const name = `${(ctx.G.nr || "").replace(/\.$/, "")}-${ctx.artName()}-Physik-${ctx.G.klasse || "8"}${was === "alles" ? "" : "-" + {A: "Angabe-A", B: "Angabe-B", EA: "Erwartungshorizont-A", EB: "Erwartungshorizont-B"}[was]}.docx`
     .replace(/^-/, "").replace(/[^\wäöüÄÖÜß.-]+/g, "-");
-  LK.wordLetzte = {blob, name};
-  const url = URL.createObjectURL(blob), a = document.createElement("a"); a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 30000);
-  return name;
+  return herunterladen(docx(doc), name);
 };
 })();

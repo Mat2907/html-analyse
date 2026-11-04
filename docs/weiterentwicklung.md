@@ -46,6 +46,13 @@ plus technische Folge-Ideen nach der Aufteilung in Module.
 7. **Smoke-Test:** headless Browser (z. B. Playwright) lädt `index.html` und prüft, dass keine Konsolenfehler auftreten und die Tab-Leiste rendert.
 8. **Barrierefreiheit-Audit** (Tastatur-Navigation durch Quiz/Karteikarten, Screenreader-Labels, `aria-live` ist bereits gesetzt).
 
+## Bereits umgesetzt
+
+- Monolith in Module aufgeteilt (`index.html` + `css/` + `js/`), verifiziert mit `tools/verify.py`
+- `README.md` mit Struktur, Datenformaten und Erweiterungs-Anleitungen
+- **Word-Export für Hefteinträge/Vortrag** (`LK.wordHeft`, Button 📄 im Druckmenü des Vortrags, `js/lehrer/40_word.js`; alle Baustein-Typen inkl. Merke/Achtung/Versuch/Beispiel/Vergleich/Formel werden unterstützt; Smoke-Test: `tools/smoke_word.mjs`)
+- **Build-Skript** `tools/build.py`: baut die Module wieder zu einer Einzeldatei (`dist/…`) zusammen, mit Selbst-Verifikation
+
 ## Mögliche Priorisierung
 
 - **Schnelle Gewinne:** Musik/three.js auslagern (kleinere Ladezeit), `prefers-reduced-motion`, Icon-Konsistenz, leere Zustände.
