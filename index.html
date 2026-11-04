@@ -1,0 +1,70 @@
+<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><link rel="stylesheet" href="css/style.css"><title>Physik Abenteuer 8 – Lehrkraft</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+
+
+</head>
+<body>
+<div id="bg" class="theme-bg" aria-hidden="true"></div>
+<header class="top"><div class="wrap"><button class="iconbtn" id="home" hidden>← Start</button><div class="brand">Physik Abenteuer 8</div><button class="iconbtn" id="music" aria-pressed="true" aria-controls="mpanel" aria-expanded="false" title="Musik und Lautstärke"></button><div class="mpanel" id="mpanel" hidden role="group" aria-label="Ton"><div class="row" style="justify-content:space-between"><label class="eyebrow" for="mvol">Lautstärke</label><output id="mvolout" class="num">70 %</output></div><div class="vol"><span aria-hidden="true">🔈</span><input type="range" id="mvol" min="0" max="100" step="1" value="70"><span aria-hidden="true">🔊</span></div><button class="btn ghost wide" id="mtoggle" aria-pressed="true">Musik ausschalten</button><button class="btn ghost wide" id="sfxtoggle" aria-pressed="true">Soundeffekte ausschalten</button></div><div class="xp" id="xp"></div></div></header>
+<div class="focusbar" id="focusbar" hidden><div class="wrap"><button class="fb-x" id="fbx" aria-label="Übung beenden">✕</button><div class="fb-mid"><div class="fb-txt" id="fbtxt"></div><div class="fb-bar"><i id="fbbar"></i></div></div><div class="fb-xp" id="fbxp"></div></div></div>
+<main class="wrap" id="app" aria-live="polite"></main>
+<nav class="tabbar" id="tabbar" aria-label="Hauptnavigation">
+<button data-tab="home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg><span>Start</span></button>
+<button data-tab="learn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 8l10-5 10 5-10 5z"/><path d="M6 10.5V16c2 2 10 2 12 0v-5.5M22 8v6"/></svg><span>Lernen</span></button>
+<button data-tab="compete"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 4h8v5a4 4 0 0 1-8 0z"/><path d="M8 6H5a3 3 0 0 0 3 4M16 6h3a3 3 0 0 1-3 4M12 13v4M8.5 20h7M10 17h4v3h-4z"/></svg><span>Wettkampf</span></button>
+<button data-tab="plan"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4M8 14l2.5 2.5L16 13"/></svg><span>Plan</span></button>
+<button data-tab="me"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg><span>Profil</span></button>
+</nav>
+<footer class="wrap credit"><span>Inhalte nach LehrplanPLUS Physik 8, Gymnasium Bayern</span></footer>
+<script src="js/data/inhalte.js"></script>
+<script src="js/engine.js"></script>
+<script src="js/vendor/three.min.js"></script>
+<script src="js/00_kern.js"></script>
+<script src="js/05_lernen.js"></script>
+<script src="js/06_ueben.js"></script>
+<script src="js/07_plan.js"></script>
+<script src="js/10_zauber.js"></script>
+<script src="js/11_sterne.js"></script>
+<script src="js/12_detektiv.js"></script>
+<script src="js/13_dekor_zauber.js"></script>
+<script src="js/14_dekor_sterne.js"></script>
+<script src="js/15_dekor_detektiv.js"></script>
+<script src="js/17_raum_detektiv.js"></script>
+<script src="js/17_raum_detektiv_aussen.js"></script>
+<script src="js/17_raum_detektiv_beweg1.js"></script>
+<script src="js/17_raum_detektiv_beweg2.js"></script>
+<script src="js/17_raum_detektiv_kraft1.js"></script>
+<script src="js/17_raum_detektiv_kraft2.js"></script>
+<script src="js/17_raum_sterne.js"></script>
+<script src="js/17_raum_sterne_b.js"></script>
+<script src="js/17_raum_sterne_c.js"></script>
+<script src="js/17_raum_zauber.js"></script>
+<script src="js/17_raum_zauber_beweg.js"></script>
+<script src="js/17_raum_zauber_kraft.js"></script>
+<script src="js/17_raum_zauber_optik.js"></script>
+<script src="js/17_raum_zauber_strom.js"></script>
+<script src="js/20_beweg1.js"></script>
+<script src="js/20_beweg2.js"></script>
+<script src="js/20_kraft1.js"></script>
+<script src="js/20_kraft2.js"></script>
+<script src="js/20_optik1.js"></script>
+<script src="js/20_optik2.js"></script>
+<script src="js/20_strom1.js"></script>
+<script src="js/20_strom2.js"></script>
+<script src="js/30_halle.js"></script>
+<script src="js/40_lern_beweg1.js"></script>
+<script src="js/40_lern_beweg2.js"></script>
+<script src="js/40_lern_kraft1.js"></script>
+<script src="js/40_lern_kraft2.js"></script>
+<script src="js/40_lern_optik1.js"></script>
+<script src="js/40_lern_optik2.js"></script>
+<script src="js/40_lern_strom1.js"></script>
+<script src="js/40_lern_strom2.js"></script>
+<script src="js/45_geschichte.js"></script>
+<script src="js/lehrer/daten.js"></script>
+<script src="js/lehrer/00_basis.js"></script>
+<script src="js/lehrer/10_vortrag.js"></script>
+<script src="js/lehrer/20_generator.js"></script>
+<script src="js/lehrer/30_einbindung.js"></script>
+<script src="js/lehrer/40_word.js"></script>
+</body></html>
